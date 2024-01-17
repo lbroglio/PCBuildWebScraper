@@ -9,8 +9,7 @@ from resources import *
 class  Sources(Enum):
     AMAZON = 0,
     EBAY = 1,
-    NEWEGG = 2,
-    MICROCENTER = 3
+    MICROCENTER = 2
 
 #Enum to hold the possible conditions an ebay item can have
 class EbayCondtions(Enum):
@@ -160,6 +159,7 @@ def scrapeEbay(searchFor, numPages, minCondition= EbayCondtions.FOR_PARTS):
         # Add the items to a list of ordered items with their similarity to the search parameter as the weight
         # This is done by finding treating the names as sets of there words and finding the jaccard similarity
         for item in searchItems:
+
             # Get the name of this item
             # Get the div which holds the title
             titleDiv = item.findChildren("div", {"class", "s-item__title"}, recursive=True)[0]
@@ -210,6 +210,58 @@ def scrapeEbay(searchFor, numPages, minCondition= EbayCondtions.FOR_PARTS):
     return orderedItems
 
 
-items = scrapeEbay("intel i7", 5)
-for i in items:
-    print(i)
+# Check the Microcenter website for Results for the item 
+def scrapeMicrocenter(searchFor, numPages):
+    # Setup list to store found items and a comparator for ordering them
+    orderedItems = []
+    comp = FoundItem.ItemComparator()
+
+    # Scrape a number of pages equal to the num pages parameter
+    for i in range(numPages):
+        # Build the URL to scrape from. The target page is the page returned when searching for the item from the microcenter home page
+        # The URL for these searches is https://www.microcenter.com/search/search_results.aspx?Ntt={keyword}+{more_words}&page={page number}
+
+        # Add the item name to the end of the base url with all of its spaces replaced with '+' characters
+        targetURL = "https://www.microcenter.com/search/search_results.aspx?Ntt=" + searchFor.replace(' ', '+') + "&page=" + str(i)
+        # Set header for the requests
+        headers = { 
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36', 
+            'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 
+            'Accept-Language' : 'en-US,en;q=0.5',
+            'Accept-Encoding' : 'gzip', 
+            'DNT' : '1', # Do Not Track Request Header 
+            'Connection' : 'close'
+        }
+        # Get the HTML page corresponding to the URL
+        try:
+            targetPage =  requests.get(targetURL, headers=headers)
+        except requests.exceptions.RequestException  as errh: 
+            print(f"ERROR: Could not reach {targetURL}. Root Cause: {errh}")
+        bspPage = BeautifulSoup(targetPage.text, features="html.parser")
+        # Find all of the item elements by targeting all elements of the "a-section" class
+        searchItems = bspPage.find_all("li", {"class": "product_wrapper"})
+
+         # Add the items to a list of ordered items with their similarity to the search parameter as the weight
+        # This is done by finding treating the names as sets of there words and finding the jaccard similarity
+        for item in searchItems:
+            # Get the item description div 
+            itemDes = item.findChildren("div", {"class", "pDescription"}, recursive=True)[0]
+
+            # Get the name of this item
+            # Get the anchor element which holds the title and link to this item
+            titleAnchor = itemDes.findChildren("a", {"class", "productClickItemV2"}, recursive=True)[0]
+  
+            # Get the title from the anchor 
+            itemName = titleAnchor.text
+
+            # Get the link to this item from the anchor
+            itemLink = titleAnchor["href"]
+
+            # Get the Jaccard similarity between this items name and the User's search term
+            jSim = findJaccardSimilarity(itemName, searchFor)
+
+            # Create a FoundItem object and add it to the list
+            itemObj = FoundItem(itemName, jSim, Sources.MICROCENTER, itemLink)
+            orderedItems = insertIntoSorted(itemObj, orderedItems, comp)
+
+    return orderedItems
