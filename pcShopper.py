@@ -1,4 +1,7 @@
 from webScraper import *
+from operator import attrgetter
+
+import heapq
 
 # Read in the keywords and prices from the user to use to search for the different parts of the build
 def getInput():
@@ -41,9 +44,30 @@ def getInput():
 
 # Check all of the sites for the parts given by the user
 def searchForParts(keywordDict):
+    # Dict which will store the lists of found results associated with a string name of the part that list holds 
+    resultsDict = {}
+
     # Go through every keyword given by the user
     for key in keywordDict:
         # Get the search term for the current part from the dict
+        searchTerm = keywordDict[key]
+
+        # Skip this term if it is None as this is the signal for the user choosing to skip the term
+        if searchTerm is None:
+            continue
+    
         
+        # Get the results for this term from every source
+        amazonResults = scrapeAmazon(3)
+        ebayResults = scrapeEbay(3)
+        microcenterResults = scrapeMicrocenter(3)
+
+        # Combine the results into one list and add them to the storage dict
+        results = heapq.merge(amazonResults,  ebayResults, microcenterResults, key=attrgetter('similarity'), reverse=True)
+        resultsDict[key] = results
+    
+    return resultsDict
+
+
 
 

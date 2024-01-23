@@ -265,3 +265,8 @@ def scrapeMicrocenter(searchFor, numPages):
             orderedItems = insertIntoSorted(itemObj, orderedItems, comp)
 
     return orderedItems
+
+
+
+if __name__ == "__main__":
+    exit(0)
