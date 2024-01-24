@@ -21,29 +21,5 @@ def findJaccardSimilarity(str1, str2):
 
 
 
-# Insert a given value into its correct position in a given sorted list by making a copy of the list with inserting the  
-# the value as its copied.
-# Given list should bne sorted in descending order
-def insertIntoSorted(toInsert, list, comparator):
-    # Create a new list
-    listCopy = []
-    # Tracks if the target item has been added to the new list
-    targetInserted = False
-
-    # Copy the list
-    for item in list:
-        if not targetInserted and comparator.compare(toInsert, item) >= 0:
-            targetInserted = True
-            listCopy.append(toInsert)
-            listCopy.append(item)
-        else:
-            listCopy.append(item)
-
-    # If the given item wasn't added during the copying add it now
-    if not targetInserted:
-        listCopy.append(toInsert)
-
-    return listCopy
-
 if __name__ == "__main__":
     exit(0)

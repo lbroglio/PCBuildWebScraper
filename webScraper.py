@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import requests
 
 from resources import * 
+from operator import attrgetter
 
 
 # Enums holding the different websites/sources that this script scrapes
@@ -118,9 +119,9 @@ def scrapeAmazon(searchFor, numPages):
 
             # Create a FoundItem object and add it to the list
             itemObj = FoundItem(itemName, jSim, Sources.AMAZON, itemLink)
-            orderedItems = insertIntoSorted(itemObj, orderedItems, comp)
+            orderedItems.append(itemObj)
 
-    return orderedItems
+    return orderedItems.sort(key=attrgetter('similarity'), reverse=True)
 
 
 # Check Ebay Results for the item 
@@ -205,9 +206,9 @@ def scrapeEbay(searchFor, numPages, minCondition= EbayCondtions.FOR_PARTS):
 
             # Create a FoundItem object and add it to the list
             itemObj = FoundItem(itemName, jSim, Sources.EBAY, itemLink, condition= conditionE)
-            orderedItems = insertIntoSorted(itemObj, orderedItems, comp)
+            orderedItems.append(itemObj)
 
-    return orderedItems
+    return orderedItems.sort(key=attrgetter('similarity'), reverse=True)
 
 
 # Check the Microcenter website for Results for the item 
@@ -262,9 +263,9 @@ def scrapeMicrocenter(searchFor, numPages):
 
             # Create a FoundItem object and add it to the list
             itemObj = FoundItem(itemName, jSim, Sources.MICROCENTER, itemLink)
-            orderedItems = insertIntoSorted(itemObj, orderedItems, comp)
+            orderedItems.append(itemObj)
 
-    return orderedItems
+    return orderedItems.sort(key=attrgetter('similarity'), reverse=True)
 
 
 
