@@ -121,7 +121,8 @@ def scrapeAmazon(searchFor, numPages):
             itemObj = FoundItem(itemName, jSim, Sources.AMAZON, itemLink)
             orderedItems.append(itemObj)
 
-    return orderedItems.sort(key=attrgetter('similarity'), reverse=True)
+    orderedItems.sort(key=attrgetter('similarity'), reverse=True)
+    return orderedItems
 
 
 # Check Ebay Results for the item 
@@ -173,10 +174,14 @@ def scrapeEbay(searchFor, numPages, minCondition= EbayCondtions.FOR_PARTS):
                 continue
 
             # Get the anchor containing the link to this item
-            itemAnchor = item.findChildren("a", {"class", "s-item__link"}, recursive=True)[0]
+            try:
+                itemAnchor = item.findChildren("a", {"class", "s-item__link"}, recursive=True)[0]
+            # If this element cannot be found move on as this is a sponsored item and is undesirable and possibly a repeat
+            except IndexError:
+                continue
             # Get the link to this item from the anchor
             itemLink = itemAnchor["href"]
-
+            
             # Scrape this items page to check its condition
             try:
                 itemPage =  requests.get(itemLink, headers=headers)
@@ -195,7 +200,18 @@ def scrapeEbay(searchFor, numPages, minCondition= EbayCondtions.FOR_PARTS):
             if "FOR PARTS" in condition:
                 conditionE = EbayCondtions.FOR_PARTS
             else:
-                conditionE = EbayCondtions[condition.strip().replace(' ', '_').replace('-','_')]
+                condition = condition.replace(' ', '_').replace('-','_')
+
+                # Replace occurences with sequences of a '_' character in the condtion string with only one _
+                lastChar = condition[0]
+                temp = condition[0]
+                for char in condition[1:]:
+                    if char != '_' or lastChar != '_':
+                        temp += char
+                    lastChar = char
+                    
+                condition = temp
+                conditionE = EbayCondtions[condition]
 
             # Compare the item's condition to the user given limit and discard it if it is too low
             if conditionE < minCondition:
@@ -208,7 +224,8 @@ def scrapeEbay(searchFor, numPages, minCondition= EbayCondtions.FOR_PARTS):
             itemObj = FoundItem(itemName, jSim, Sources.EBAY, itemLink, condition= conditionE)
             orderedItems.append(itemObj)
 
-    return orderedItems.sort(key=attrgetter('similarity'), reverse=True)
+    orderedItems.sort(key=attrgetter('similarity'), reverse=True)
+    return orderedItems
 
 
 # Check the Microcenter website for Results for the item 
@@ -265,8 +282,8 @@ def scrapeMicrocenter(searchFor, numPages):
             itemObj = FoundItem(itemName, jSim, Sources.MICROCENTER, itemLink)
             orderedItems.append(itemObj)
 
-    return orderedItems.sort(key=attrgetter('similarity'), reverse=True)
-
+    orderedItems.sort(key=attrgetter('similarity'), reverse=True)
+    return orderedItems
 
 
 if __name__ == "__main__":

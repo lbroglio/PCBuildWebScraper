@@ -58,16 +58,17 @@ def searchForParts(keywordDict):
     
         
         # Get the results for this term from every source
-        amazonResults = scrapeAmazon(3)
-        ebayResults = scrapeEbay(3)
-        microcenterResults = scrapeMicrocenter(3)
+        amazonResults = scrapeAmazon(searchTerm, 3)
+        ebayResults = scrapeEbay(searchTerm, 3)
+        microcenterResults = scrapeMicrocenter(searchTerm, 3)
 
         # Combine the results into one list and add them to the storage dict
-        results = heapq.merge(amazonResults,  ebayResults, microcenterResults, key=attrgetter('similarity'), reverse=True)
+        results = list(heapq.merge(amazonResults,  ebayResults, microcenterResults, key=attrgetter('similarity'), reverse=True))
         resultsDict[key] = results
     
     return resultsDict
 
 
-
-
+parts = searchForParts(getInput()[0])
+for key in parts:
+    print(f"{key}: {parts[key][0]}")
